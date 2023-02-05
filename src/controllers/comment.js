@@ -8,7 +8,7 @@ class Comment {
 		console.log('get comment by id')
 		const {_id} = req.body
 
-		let comments = await commentDb.find({post_id: _id}).sort({createdAt: -1})
+		let comments = await commentDb.find({postId: _id}).sort({createdAt: -1})
 		const users = await userDb.find()
 		comments = comments.map((comment) => {
 			const user = users.find((user) => user?.email === comment?.author)
@@ -17,7 +17,6 @@ class Comment {
 				author: user,
 			}
 		})
-		console.log(comments)
 
 		res.status(200).send({comments})
 	}
