@@ -18,6 +18,10 @@ class ArticleController {
 	async getById(req, res) {
 		console.log('get article by id')
 		const {_id} = req.body
+		console.log(_id)
+
+		if (!_id) return res.status(200).send({})
+
 		const article = await articleDb.findById(_id)
 		const users = await userDb.find()
 		const user = users.find((user) => user?.email === article?.author)
@@ -28,7 +32,7 @@ class ArticleController {
 		})
 		res
 			.status(200)
-			.send({...article._doc, author: user, _id: article._id, comments})
+			.send({...article?._doc, author: user, _id: article?._id, comments})
 	}
 
 	async add(req, res) {
