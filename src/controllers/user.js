@@ -9,33 +9,75 @@ class UserController {
 
 		const email =
 			authorEmail || jwt.verify(token, process.env.ACCESS_TOKEN_SECRET).email
-		const user = await userDb.findOne({email})
+		const users = await userDb.find()
+		const user = users.find((user) => user?.email.includes(email))
+		const chattedPeople = user?.chattedWith.map((email) => {
+			const friend = users.find((user) => user.email === email)
+			return {
+				username: friend.username,
+				email: friend.email,
+				image: friend?.image,
+			}
+		})
 
 		res.status(200).send({
-			username: user?.username,
+			username: user.username,
 			email,
 			bio: user?.bio,
 			image: user?.image,
 			background: user?.background,
 			following: user?.following,
+			chattedWith: chattedPeople || [],
 		})
+	}
+
+	async getUserByName(req, res) {
+		console.log('get user by name')
+		let {name} = req.body
+		name = name.toLowerCase()
+
+		if (!name) return res.status(200).send([])
+
+		const users = await userDb.find()
+		const foundUsers = users
+			.filter((user) => user?.username.toLowerCase().includes(name))
+			.map((user) => {
+				return {
+					username: user.username,
+					image: user?.image,
+					email: user.email,
+				}
+			})
+
+		res.status(200).send(foundUsers)
 	}
 
 	async changeInfo(req, res) {
 		console.log('change user info')
-		const {token, image, background, username, bio, newPw} = req.body
+		const {token, image, background, username, bio, newPw, chattedPerson} =
+			req.body
 
 		const email = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET).email
-		await userDb.findOneAndUpdate(
-			{email},
-			{
-				image,
-				background,
-				username,
-				bio,
-				password: await bcrypt.hash(newPw, 10),
+		if (chattedPerson) {
+			const user = await userDb.findOne({email})
+			if (!user?.chattedWith.includes(chattedPerson)) {
+				if (user?.chattedWith.length === 0) user.chattedWith = [chattedPerson]
+				else user?.chattedWith.unshift(chattedPerson)
 			}
-		)
+			await user.save()
+		} else {
+			await userDb.findOneAndUpdate(
+				{email},
+				{
+					image,
+					background,
+					username,
+					bio,
+					password: await bcrypt.hash(newPw, 10),
+				}
+			)
+		}
+
 		res.status(200).send({message: 'thanh cong'})
 	}
 

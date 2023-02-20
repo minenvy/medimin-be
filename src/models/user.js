@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
 	image: String,
 	background: String,
 	following: [],
+	chattedWith: [],
 })
 
 const User = mongoose.model('user', userSchema)
