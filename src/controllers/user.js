@@ -11,14 +11,17 @@ class UserController {
 			authorEmail || jwt.verify(token, process.env.ACCESS_TOKEN_SECRET).email
 		const users = await userDb.find()
 		const user = users.find((user) => user?.email.includes(email))
-		const chattedPeople = user?.chattedWith.map((email) => {
-			const friend = users.find((user) => user.email === email)
-			return {
-				username: friend.username,
-				email: friend.email,
-				image: friend?.image,
-			}
-		})
+		const chattedPeople = user?.chattedWith
+			.map((email) => {
+				const friend = users.find((user) => user.email === email)
+				if (friend)
+					return {
+						username: friend.username,
+						email: friend.email,
+						image: friend?.image,
+					}
+			})
+			.filter((user) => !!user)
 
 		res.status(200).send({
 			username: user.username,
